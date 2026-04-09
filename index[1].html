@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚾ Mets Miles Challenge — 2025</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@300;400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <style>
+    /* ─── VARIABLES ─────────────────────────────────────────────── */
+    :root {
+      --blue:        #002D72;
+      --orange:      #FF5910;
+      --amber:       #FFB300;
+      --green-dark:  #0d3a18;
+      --green-mid:   #1a5c2a;
+      --green-light: #2e7d4f;
+      --board-bg:    #060a06;
+      --panel:       rgba(4, 12, 4, 0.78);
+      --chalk:       rgba(255,255,255,0.82);
+      --dim:         rgba(255,255,255,0.45);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ─── BASEBALL FIELD BACKGROUND ─────────────────────────────── */
+    body {
+      font-family: 'Oswald', sans-serif;
+      color: #f0f0f0;
+      min-height: 100vh;
+      background-color: var(--green-dark);
+      /* Grass mowing stripes */
+      background-image:
+        repeating-linear-gradient(
+          0deg,
+          transparent 0px, transparent 70px,
+          rgba(255,255,255,0.018) 70px, rgba(255,255,255,0.018) 140px
+        ),
+        /* Stadium floodlights glow */
+        radial-gradient(ellipse 35% 25% at 15% 0%, rgba(255,230,120,0.1) 0%, transparent 55%),
+        radial-gradient(ellipse 35% 25% at 85% 0%, rgba(255,230,120,0.1) 0%, transparent 55%),
+        /* Infield dirt arc glow */
+        radial-gradient(ellipse 70% 30% at 50% 105%, rgba(180,130,70,0.14) 0%, transparent 55%),
+        radial-gradient(ellipse 100% 60% at 50% 120%, rgba(30,90,45,0.6) 0%, transparent 55%);
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Baseball diamond watermark */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 900' preserveAspectRatio='xMidYMax meet'%3E%3C!-- Outfield warning track arc --%3E%3Ccircle cx='600' cy='1050' r='800' fill='none' stroke='rgba(180,130,70,0.07)' stroke-width='28'/%3E%3C!-- Outfield grass arc --%3E%3Ccircle cx='600' cy='1050' r='772' fill='none' stroke='rgba(255,255,255,0.04)' stroke-width='2'/%3E%3C!-- Infield dirt circle --%3E%3Ccircle cx='600' cy='650' r='200' fill='rgba(180,130,70,0.05)' stroke='rgba(180,130,70,0.08)' stroke-width='1'/%3E%3C!-- Diamond --%3E%3Cpolygon points='600,420 780,600 600,780 420,600' fill='rgba(180,130,70,0.06)' stroke='rgba(255,255,255,0.1)' stroke-width='2'/%3E%3C!-- Pitcher mound --%3E%3Ccircle cx='600' cy='600' r='18' fill='rgba(180,130,70,0.18)' stroke='rgba(255,255,255,0.1)' stroke-width='1'/%3E%3C!-- Foul lines --%3E%3Cline x1='600' y1='780' x2='-100' y2='80' stroke='rgba(255,255,255,0.06)' stroke-width='2'/%3E%3Cline x1='600' y1='780' x2='1300' y2='80' stroke='rgba(255,255,255,0.06)' stroke-width='2'/%3E%3C!-- Home plate --%3E%3Cpolygon points='600,780 618,798 618,820 582,820 582,798' fill='rgba(255,255,255,0.15)'/%3E%3C!-- Bases --%3E%3Crect x='593' y='413' width='14' height='14' rx='2' fill='rgba(255,255,255,0.18)'/%3E%3Crect x='773' y='593' width='14' height='14' rx='2' fill='rgba(255,255,255,0.18)'/%3E%3Crect x='413' y='593' width='14' height='14' rx='2' fill='rgba(255,255,255,0.18)'/%3E%3C!-- On-deck circles --%3E%3Ccircle cx='480' cy='810' r='22' fill='none' stroke='rgba(255,255,255,0.06)' stroke-width='1.5'/%3E%3Ccircle cx='720' cy='810' r='22' fill='none' stroke='rgba(255,255,255,0.06)' stroke-width='1.5'/%3E%3C/svg%3E");
+      background-size: 100% auto;
+      background-position: center bottom;
+      background-repeat: no-repeat;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─── LAYOUT ─────────────────────────────────────────────────── */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 20px 40px;
+    }
+
+    /* ─── HEADER ─────────────────────────────────────────────────── */
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .header-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.72rem;
+      letter-spacing: 4px;
+      color: var(--amber);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .header-eyebrow::before,
+    .header-eyebrow::after {
+      content: '';
+      width: 30px;
+      height: 1px;
+      background: var(--amber);
+      opacity: 0.5;
+    }
+
+    .header h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.8rem, 7vw, 5.5rem);
+      letter-spacing: 6px;
+      color: #fff;
+      text-shadow:
+        0 0 50px rgba(255,89,16,0.35),
+        0 4px 0 rgba(0,0,0,0.6),
+        0 8px 20px rgba(0,0,0,0.4);
+      line-height: 0.95;
+    }
+
+    .header h1 em {
+      font-style: normal;
+      color: var(--orange);
+    }
+
+    .header-sub {
+      font-size: 0.78rem;
+      font-weight: 300;
+      letter-spacing: 3px;
+      color: var(--dim);
+      margin-top: 10px;
+    }
+
+    /* ─── SCOREBOARD ─────────────────────────────────────────────── */
+    .scoreboard {
+      background: var(--board-bg);
+      border: 2px solid rgba(255,179,0,0.22);
+      border-radius: 6px;
+      padding: 28px 32px 20px;
+      margin-bottom: 20px;
+      box-shadow:
+        0 0 80px rgba(0,0,0,0.8),
+        inset 0 0 40px rgba(0,0,0,0.5),
+        0 0 0 1px rgba(255,179,0,0.06);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .scoreboard::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent 0%, var(--amber) 35%, #fff 50%, var(--amber) 65%, transparent 100%);
+      opacity: 0.6;
+    }
+
+    .scoreboard::after {
+      content: 'NEW YORK METS 2025';
+      position: absolute;
+      bottom: 18px;
+      right: 24px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.7rem;
+      letter-spacing: 3px;
+      color: rgba(255,179,0,0.2);
+    }
+
+    .board-header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .board-header-text {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.8rem;
+      letter-spacing: 5px;
+      color: rgba(255,179,0,0.5);
+    }
+
+    .board-header-line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,179,0,0.25));
+    }
+
+    .board-header-line:first-child {
+      background: linear-gradient(90deg, rgba(255,179,0,0.25), transparent);
+    }
+
+    /* Main score display */
+    .score-row {
+      display: grid;
+      grid-template-columns: 1fr 80px 1fr;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .score-side {
+      text-align: center;
+    }
+
+    .score-tag {
+      display: inline-block;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.78rem;
+      letter-spacing: 3px;
+      padding: 4px 14px;
+      border-radius: 2px;
+      margin-bottom: 10px;
+    }
+
+    .score-tag.runs  { background: var(--orange); color: #fff; }
+    .score-tag.miles { background: var(--blue);   color: #fff; }
+
+    .score-digit {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(4.5rem, 11vw, 8rem);
+      line-height: 0.9;
+      color: var(--amber);
+      text-shadow:
+        0 0 40px rgba(255,179,0,0.55),
+        0 0 80px rgba(255,179,0,0.2),
+        0 2px 0 rgba(0,0,0,0.8);
+      letter-spacing: -3px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .score-sub {
+      font-size: 0.72rem;
+      font-weight: 300;
+      letter-spacing: 1px;
+      margin-top: 5px;
+      min-height: 1.2em;
+    }
+
+    .score-sub.ahead  { color: #4caf50; }
+    .score-sub.behind { color: #ef5350; }
+    .score-sub.even   { color: var(--amber); }
+
+    .score-vs {
+      text-align: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.2rem;
+      color: rgba(255,179,0,0.35);
+      letter-spacing: 2px;
+    }
+
+    /* Recent games strip — like an inning row */
+    .games-strip {
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding-top: 16px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      flex-wrap: nowrap;
+    }
+
+    .games-strip::-webkit-scrollbar { display: none; }
+
+    .strip-label {
+      font-size: 0.6rem;
+      letter-spacing: 2px;
+      color: var(--dim);
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-right: 4px;
+    }
+
+    .game-cell {
+      flex-shrink: 0;
+      width: 34px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 2px;
+      padding: 4px 2px;
+      text-align: center;
+      cursor: default;
+      transition: background 0.15s;
+    }
+
+    .game-cell:hover { background: rgba(255,255,255,0.07); }
+
+    .game-cell .gc-num {
+      font-size: 0.5rem;
+      color: var(--dim);
+      letter-spacing: 1px;
+    }
+
+    .game-cell .gc-score {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.95rem;
+      line-height: 1.2;
+    }
+
+    .gc-score.win  { color: #66bb6a; }
+    .gc-score.loss { color: #ef5350; }
+
+    /* ─── WEEK STATS ─────────────────────────────────────────────── */
+    .week-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .week-card {
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 6px;
+      padding: 20px 22px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      backdrop-filter: blur(12px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .week-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+    }
+
+    .week-card.runs-card::before  { background: var(--orange); }
+    .week-card.miles-card::before { background: #4a8fd4; }
+
+    .week-icon {
+      font-size: 2rem;
+      flex-shrink: 0;
+    }
+
+    .week-label {
+      font-size: 0.66rem;
+      letter-spacing: 3px;
+      color: var(--dim);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+
+    .week-number {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.8rem;
+      line-height: 1;
+    }
+
+    .week-number.orange { color: var(--orange); }
+    .week-number.teal   { color: #4a8fd4; }
+
+    .week-detail {
+      font-size: 0.68rem;
+      color: var(--dim);
+      margin-top: 3px;
+      font-weight: 300;
+    }
+
+    /* ─── CHART PANEL ────────────────────────────────────────────── */
+    .chart-panel {
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 6px;
+      padding: 26px 28px 22px;
+      margin-bottom: 18px;
+      backdrop-filter: blur(12px);
+    }
+
+    .chart-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .chart-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 4px;
+      color: #fff;
+    }
+
+    .chart-subtitle {
+      font-size: 0.68rem;
+      letter-spacing: 2px;
+      color: var(--dim);
+      font-weight: 300;
+      margin-top: 3px;
+    }
+
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.7rem;
+      letter-spacing: 1px;
+      color: var(--dim);
+    }
+
+    .l-line {
+      width: 22px;
+      height: 3px;
+      border-radius: 2px;
+    }
+
+    .l-dashed {
+      background: repeating-linear-gradient(90deg, #888 0px, #888 4px, transparent 4px, transparent 9px);
+      height: 2px;
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 360px;
+    }
+
+    /* ─── STATUS BAR ─────────────────────────────────────────────── */
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.65rem;
+      letter-spacing: 1.5px;
+      color: var(--dim);
+      padding: 11px 16px;
+      background: rgba(0,0,0,0.35);
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .live-dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #4caf50;
+      margin-right: 6px;
+      vertical-align: middle;
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    /* ─── LOADING / ERROR STATES ─────────────────────────────────── */
+    .loading { animation: shimmer 1.5s ease-in-out infinite alternate; }
+    @keyframes shimmer {
+      from { opacity: 0.4; }
+      to   { opacity: 1; }
+    }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────────────── */
+    @media (max-width: 580px) {
+      .score-row  { grid-template-columns: 1fr; }
+      .score-vs   { display: none; }
+      .week-grid  { grid-template-columns: 1fr; }
+      .chart-top  { flex-direction: column; }
+      .chart-wrap { height: 280px; }
+      .scoreboard { padding: 20px 16px 16px; }
+    }
+  </style>
+</head>
+
+<body>
+<div class="container">
+
+  <!-- ── HEADER ───────────────────────────────────────────────────── -->
+  <header class="header">
+    <div class="header-eyebrow">2025 Season Challenge</div>
+    <h1>METS <em>MILES</em><br>CHALLENGE</h1>
+    <p class="header-sub">A RUN FOR EVERY RUN — TRACKING THE 2025 NEW YORK METS SEASON</p>
+  </header>
+
+  <!-- ── SCOREBOARD ───────────────────────────────────────────────── -->
+  <div class="scoreboard">
+    <div class="board-header">
+      <div class="board-header-line"></div>
+      <div class="board-header-text">⚾ &nbsp;SEASON TALLY&nbsp; ⚾</div>
+      <div class="board-header-line"></div>
+    </div>
+
+    <div class="score-row">
+      <div class="score-side">
+        <div><span class="score-tag runs">METS RUNS</span></div>
+        <div class="score-digit loading" id="total-runs">—</div>
+        <div class="score-sub" id="runs-sub"></div>
+      </div>
+
+      <div class="score-vs">VS</div>
+
+      <div class="score-side">
+        <div><span class="score-tag miles">MILES RUN</span></div>
+        <div class="score-digit loading" id="total-miles">—</div>
+        <div class="score-sub" id="miles-sub"></div>
+      </div>
+    </div>
+
+    <!-- Recent games like scoreboard inning row -->
+    <div class="games-strip">
+      <span class="strip-label">LAST 14 GAMES →</span>
+      <div id="game-cells">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PAST 7 DAYS ───────────────────────────────────────────────── -->
+  <div class="week-grid">
+    <div class="week-card runs-card">
+      <div class="week-icon">⚾</div>
+      <div>
+        <div class="week-label">Mets Runs — Past 7 Days</div>
+        <div class="week-number orange loading" id="week-runs">—</div>
+        <div class="week-detail" id="week-runs-detail">— games</div>
+      </div>
+    </div>
+    <div class="week-card miles-card">
+      <div class="week-icon">🏃</div>
+      <div>
+        <div class="week-label">Miles Run — Past 7 Days</div>
+        <div class="week-number teal loading" id="week-miles">—</div>
+        <div class="week-detail" id="week-miles-detail">— activities</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CHART ─────────────────────────────────────────────────────── -->
+  <div class="chart-panel">
+    <div class="chart-top">
+      <div>
+        <div class="chart-title">2025 SEASON PROGRESS</div>
+        <div class="chart-subtitle">CUMULATIVE TOTALS · OPENING DAY → END OF SEASON</div>
+      </div>
+      <div class="chart-legend">
+        <div class="legend-item">
+          <div class="l-line" style="background:#FF5910;"></div>
+          <span>Mets Runs</span>
+        </div>
+        <div class="legend-item">
+          <div class="l-line" style="background:#4a8fd4;"></div>
+          <span>Miles Run</span>
+        </div>
+        <div class="legend-item">
+          <div class="l-line l-dashed"></div>
+          <span>Historical Avg Pace (690 runs)</span>
+        </div>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="chart"></canvas>
+    </div>
+  </div>
+
+  <!-- ── STATUS BAR ────────────────────────────────────────────────── -->
+  <div class="status-bar">
+    <span><span class="live-dot"></span>MLB: Live via mlbstatsapi.mlb.com</span>
+    <span id="strava-status">Strava: Loading…</span>
+    <span id="last-updated">Loaded: —</span>
+  </div>
+
+</div><!-- /.container -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+//  CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════
+const METS_ID       = 121;
+const SEASON_START  = '2025-03-27';
+const SEASON_END    = '2025-09-28';
+const HIST_AVG      = 690;   // ~10-year Mets average runs per season
+
+// ═══════════════════════════════════════════════════════════════════════
+//  MLB DATA
+// ═══════════════════════════════════════════════════════════════════════
+async function fetchMetsSchedule() {
+  const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=${METS_ID}` +
+              `&season=2025&gameType=R&hydrate=linescore` +
+              `&startDate=${SEASON_START}&endDate=${SEASON_END}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('MLB API error ' + r.status);
+  return r.json();
+}
+
+function parseGames(data) {
+  const games = [];
+  for (const d of data.dates ?? []) {
+    for (const g of d.games ?? []) {
+      if (g.status.abstractGameState !== 'Final') continue;
+      const isHome  = g.teams.home.team.id === METS_ID;
+      const myScore = isHome ? g.teams.home.score : g.teams.away.score;
+      const oppScore= isHome ? g.teams.away.score : g.teams.home.score;
+      const opp     = isHome ? g.teams.away.team.name : g.teams.home.team.name;
+      games.push({
+        date: g.gameDate.slice(0, 10),
+        runs: myScore ?? 0,
+        opp:  oppScore ?? 0,
+        oppName: opp,
+        win: (myScore ?? 0) > (oppScore ?? 0),
+      });
+    }
+  }
+  return games.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function cumulativeRuns(games) {
+  let cum = 0;
+  return games.map(g => ({ x: g.date, y: (cum += g.runs) }));
+}
+
+function weekRuns(games) {
+  const cut = new Date(); cut.setDate(cut.getDate() - 7);
+  const recent = games.filter(g => new Date(g.date) >= cut);
+  return { runs: recent.reduce((s, g) => s + g.runs, 0), count: recent.length };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  STRAVA DATA  (loaded from strava-data.json, generated by GH Actions)
+// ═══════════════════════════════════════════════════════════════════════
+async function fetchStravaData() {
+  const r = await fetch('./strava-data.json?_=' + Date.now());
+  if (!r.ok) throw new Error('strava-data.json not found');
+  return r.json();
+}
+
+function cumulativeMiles(activities) {
+  const sorted = [...activities].sort((a, b) => a.date.localeCompare(b.date));
+  let cum = 0;
+  return sorted.map(a => ({ x: a.date, y: +(cum += a.miles).toFixed(2) }));
+}
+
+function weekMiles(activities) {
+  const cut = new Date(); cut.setDate(cut.getDate() - 7);
+  const recent = activities.filter(a => new Date(a.date) >= cut);
+  return {
+    miles: +recent.reduce((s, a) => s + a.miles, 0).toFixed(1),
+    count: recent.length,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  HISTORICAL PACE LINE
+//  Diagonal from (OpeningDay, 0) → (today, proportional) → (EndOfSeason, 690)
+// ═══════════════════════════════════════════════════════════════════════
+function buildPaceLine() {
+  const start   = new Date(SEASON_START);
+  const end     = new Date(SEASON_END);
+  const today   = new Date();
+  const totalMs = end - start;
+  const stopAt  = today < end ? today : end;
+  const points  = [];
+
+  // Generate one point every 3 days from opening day up to today
+  for (let d = new Date(start); d <= stopAt; d.setDate(d.getDate() + 3)) {
+    const ratio = (d - start) / totalMs;
+    points.push({
+      x: d.toISOString().slice(0, 10),
+      y: +(HIST_AVG * ratio).toFixed(1),
+    });
+  }
+  // Ensure today's point is included
+  if (stopAt > start) {
+    const ratio = (stopAt - start) / totalMs;
+    points.push({ x: stopAt.toISOString().slice(0, 10), y: +(HIST_AVG * ratio).toFixed(1) });
+  }
+  return points;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  CHART
+// ═══════════════════════════════════════════════════════════════════════
+let chartInst = null;
+function renderChart(runsData, milesData, paceData) {
+  const ctx = document.getElementById('chart').getContext('2d');
+  if (chartInst) chartInst.destroy();
+
+  chartInst = new Chart(ctx, {
+    type: 'line',
+    data: {
+      datasets: [
+        {
+          label: 'Mets Runs',
+          data: runsData,
+          borderColor: '#FF5910',
+          backgroundColor: 'rgba(255,89,16,0.07)',
+          borderWidth: 2.5,
+          pointRadius: 0, pointHoverRadius: 5,
+          tension: 0.25, fill: true,
+        },
+        {
+          label: 'Miles Run',
+          data: milesData,
+          borderColor: '#4a8fd4',
+          backgroundColor: 'rgba(74,143,212,0.07)',
+          borderWidth: 2.5,
+          pointRadius: 0, pointHoverRadius: 5,
+          tension: 0.25, fill: true,
+        },
+        {
+          label: `Avg Pace (${HIST_AVG} runs/season)`,
+          data: paceData,
+          borderColor: 'rgba(255,255,255,0.3)',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          borderDash: [8, 6],
+          pointRadius: 0,
+          tension: 0, fill: false,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        x: {
+          type: 'time',
+          time: { unit: 'month', displayFormats: { month: 'MMM' } },
+          min: SEASON_START,
+          max: SEASON_END,
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: 'rgba(255,255,255,0.45)', font: { family: 'Oswald', size: 11 } },
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          ticks: { color: 'rgba(255,255,255,0.45)', font: { family: 'Oswald', size: 11 } },
+        },
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(4,10,4,0.92)',
+          titleFont: { family: 'Oswald', size: 13 },
+          bodyFont:  { family: 'Oswald', size: 12 },
+          borderColor: 'rgba(255,255,255,0.12)',
+          borderWidth: 1,
+          padding: 10,
+          callbacks: {
+            title: (items) => {
+              const dt = new Date(items[0].parsed.x);
+              return dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════════════════════════════════
+function stopLoading(id) {
+  document.getElementById(id)?.classList.remove('loading');
+}
+
+function setEl(id, val) {
+  const el = document.getElementById(id);
+  if (el) { el.textContent = val; stopLoading(id); }
+}
+
+function updateScoreboard(totalRuns, totalMiles) {
+  setEl('total-runs',  totalRuns);
+  setEl('total-miles', totalMiles.toFixed(1));
+
+  const gap  = totalRuns - totalMiles;
+  const rSub = document.getElementById('runs-sub');
+  const mSub = document.getElementById('miles-sub');
+
+  if (gap > 0) {
+    rSub.textContent  = `▲ ${gap.toFixed(0)} runs ahead`;
+    rSub.className    = 'score-sub behind';
+    mSub.textContent  = `▼ ${gap.toFixed(0)} miles to catch up`;
+    mSub.className    = 'score-sub behind';
+  } else if (gap < 0) {
+    rSub.textContent  = `▼ ${Math.abs(gap).toFixed(0)} runs behind`;
+    rSub.className    = 'score-sub ahead';
+    mSub.textContent  = `▲ ${Math.abs(gap).toFixed(0)} miles ahead!`;
+    mSub.className    = 'score-sub ahead';
+  } else {
+    rSub.textContent  = 'Even!';
+    rSub.className    = 'score-sub even';
+    mSub.textContent  = 'Even!';
+    mSub.className    = 'score-sub even';
+  }
+}
+
+function renderGameCells(games) {
+  const recent = games.slice(-14);
+  const wrap   = document.getElementById('game-cells');
+  if (!wrap) return;
+  wrap.style.display = 'flex';
+  wrap.style.gap = '5px';
+  wrap.innerHTML = recent.map((g, i) => {
+    const gNum = games.length - recent.length + i + 1;
+    return `
+      <div class="game-cell" title="G${gNum} · ${g.date}\nvs ${g.oppName}\nMets ${g.runs}–${g.opp}">
+        <div class="gc-num">G${gNum}</div>
+        <div class="gc-score ${g.win ? 'win' : 'loss'}">${g.runs}</div>
+      </div>`;
+  }).join('');
+}
+
+function updateWeekStats(wr, wm) {
+  setEl('week-runs',   wr.runs);
+  setEl('week-miles',  wm.miles.toFixed(1));
+  setEl('week-runs-detail',  `${wr.count} game${wr.count !== 1 ? 's' : ''} played`);
+  setEl('week-miles-detail', `${wm.count} activit${wm.count !== 1 ? 'ies' : 'y'} logged`);
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  MAIN
+// ═══════════════════════════════════════════════════════════════════════
+async function init() {
+  const [mlbResult, stravaResult] = await Promise.allSettled([
+    fetchMetsSchedule(),
+    fetchStravaData(),
+  ]);
+
+  // ── MLB ──────────────────────────────────────────────────────────────
+  let games       = [];
+  let totalRuns   = 0;
+  let runsChart   = [];
+  let wr          = { runs: 0, count: 0 };
+
+  if (mlbResult.status === 'fulfilled') {
+    games     = parseGames(mlbResult.value);
+    totalRuns = games.reduce((s, g) => s + g.runs, 0);
+    runsChart = cumulativeRuns(games);
+    wr        = weekRuns(games);
+    renderGameCells(games);
+  } else {
+    console.warn('MLB fetch failed:', mlbResult.reason);
+    setEl('total-runs', 'ERR');
+  }
+
+  // ── STRAVA ───────────────────────────────────────────────────────────
+  let totalMilesVal = 0;
+  let milesChart    = [];
+  let wm            = { miles: 0, count: 0 };
+
+  const stravaStatus = document.getElementById('strava-status');
+
+  if (stravaResult.status === 'fulfilled') {
+    const sd      = stravaResult.value;
+    totalMilesVal = sd.total_miles ?? 0;
+    const acts    = sd.activities  ?? [];
+    milesChart    = cumulativeMiles(acts);
+    wm            = weekMiles(acts);
+
+    const upd = sd.last_updated
+      ? new Date(sd.last_updated).toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })
+      : 'unknown';
+    if (stravaStatus) stravaStatus.textContent = `Strava: Updated ${upd}`;
+  } else {
+    console.warn('strava-data.json not found (see README to set up Strava Actions)');
+    if (stravaStatus) {
+      stravaStatus.textContent = 'Strava: Not yet configured — see README';
+      stravaStatus.style.color = '#ef9a9a';
+    }
+    setEl('total-miles', '0.0');
+  }
+
+  updateScoreboard(totalRuns, totalMilesVal);
+  updateWeekStats(wr, wm);
+  renderChart(runsChart, milesChart, buildPaceLine());
+
+  const upEl = document.getElementById('last-updated');
+  if (upEl) upEl.textContent = `Loaded: ${new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' })}`;
+}
+
+init();
+</script>
+</body>
+</html>
