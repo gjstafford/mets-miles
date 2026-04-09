@@ -4,7 +4,7 @@ fetch_strava.py
 Run by GitHub Actions every 6 hours.
 Reads STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, STRAVA_REFRESH_TOKEN from env,
 exchanges them for a fresh access token, pulls all Run activities since
-Opening Day 2025, and writes strava-data.json to the repo root.
+Opening Day 2026, and writes strava-data.json to the repo root.
 """
 
 import os, json, urllib.request, urllib.parse
@@ -15,8 +15,8 @@ CLIENT_ID      = os.environ["STRAVA_CLIENT_ID"]
 CLIENT_SECRET  = os.environ["STRAVA_CLIENT_SECRET"]
 REFRESH_TOKEN  = os.environ["STRAVA_REFRESH_TOKEN"]
 
-# 2025 Opening Day (UTC midnight)
-SEASON_START_EPOCH = int(datetime(2025, 3, 27, tzinfo=timezone.utc).timestamp())
+# 2026 Opening Day (UTC midnight)
+SEASON_START_EPOCH = int(datetime(2026, 3, 26, tzinfo=timezone.utc).timestamp())
 
 # ── HTTP helpers ──────────────────────────────────────────────────────
 def http_post(url: str, data: dict) -> dict:
@@ -43,7 +43,7 @@ access_token = token_resp["access_token"]
 print(f"  Got access token (expires in {token_resp.get('expires_in', '?')}s)")
 
 # ── Fetch all activities since Opening Day ────────────────────────────
-print("Fetching Strava activities since 2025-03-27…")
+print("Fetching Strava activities since 2026-03-26…")
 all_activities = []
 page = 1
 
