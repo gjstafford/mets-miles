@@ -3,7 +3,7 @@ name: Update Strava Data
 on:
   # Run every 6 hours
   schedule:
-    - cron: '7 */6 * * *'
+   # - cron: '7 */6 * * *'
   # Allow manual trigger from the Actions tab
   workflow_dispatch:
 
